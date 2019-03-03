@@ -2,6 +2,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "bento/ubuntu-18.04"
   config.vm.provision "chef_solo" do |chef|
     chef.add_recipe "common"
+    chef.add_recipe "consul"
     chef.add_recipe "vault"
   end
 
