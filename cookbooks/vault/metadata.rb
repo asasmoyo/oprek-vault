@@ -1,0 +1,2 @@
+name 'vault'
+depends 'consul'
