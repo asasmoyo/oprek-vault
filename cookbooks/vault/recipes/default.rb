@@ -4,6 +4,7 @@ dir = "/opt/vault"
 vault_zip = "/vagrant/tmp/vault.zip"
 vault_bin = "#{dir}/current/vault"
 config_file = "#{dir}/config.hcl"
+env_file = "/etc/profile.d/vault.sh"
 
 group user do
 end
@@ -96,4 +97,13 @@ systemd_unit 'vault.service' do
   EOF
 
   action [:create, :enable, :restart]
+end
+
+file env_file do
+  content <<~EOF
+    export VAULT_ADDR=http://127.0.0.1:8200
+  EOF
+  user 'root'
+  group 'root'
+  mode 0700
 end
