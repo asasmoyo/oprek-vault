@@ -1,0 +1,5 @@
+default['vault']['user'] = 'vault'
+default['vault']['dir'] = '/opt/vault'
+default['vault']['bin'] = '/opt/vault/current/vault'
+default['vault']['config_file'] = '/opt/vault/config.hcl'
+default['vault']['env_file'] = '/etc/profile.d/vault.sh'

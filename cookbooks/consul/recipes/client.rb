@@ -1,10 +1,5 @@
 include_recipe '::install'
 
-dir = "/opt/consul"
-consul_bin = "#{dir}/current/consul"
-config_file = "#{dir}/config.hcl"
-encryption_key = "bL/xPRcn6z4vyzmiDDqPZA=="
-
 listen_ip = nil
 node[:network][:interfaces][:eth1][:addresses].each do |k, v|
   if ! v['family'].nil? && v['family'] == 'inet'
@@ -15,22 +10,22 @@ if listen_ip.nil?
   raise "can't find listen ip"
 end
 
-file config_file do
+file node[:consul][:config_file] do
   content <<~EOF
-    data_dir = "#{dir}/data"
+    data_dir = "#{node[:consul][:data_dir]}"
     bind_addr = "#{listen_ip}"
     client_addr = "0.0.0.0"
-    encrypt = "#{encryption_key}"
+    encrypt = "#{node[:consul][:encryption_key]}"
 
-    datacenter = "mydc"
+    datacenter = "#{node[:consul][:dc]}"
     node_name = "#{listen_ip}"
     retry_join = ["10.11.12.11", "10.11.12.12", "10.11.12.13"]
 
     ui = true
   EOF
-  user user
-  group user
-  mode 0775
+  user node[:consul][:user]
+  group node[:consul][:user]
+  mode 0664
 end
 
 systemd_unit 'consul.service' do
@@ -40,13 +35,13 @@ systemd_unit 'consul.service' do
     Documentation=https://www.consul.io/
     Requires=network-online.target
     After=network-online.target
-    ConditionFileNotEmpty=#{config_file}
+    ConditionFileNotEmpty=#{node[:consul][:config_file]}
 
     [Service]
-    User=consul
-    Group=consul
-    ExecStart=#{consul_bin} agent -config-dir=#{dir} -config-format=hcl
-    ExecReload=#{consul_bin} reload
+    User=#{node[:consul][:user]}
+    Group=#{node[:consul][:user]}
+    ExecStart=#{node[:consul][:bin]} agent -config-dir=#{node[:consul][:dir]} -config-format=hcl
+    ExecReload=#{node[:consul][:bin]} reload
     KillMode=process
     Restart=on-failure
     LimitNOFILE=65536
@@ -54,6 +49,6 @@ systemd_unit 'consul.service' do
     [Install]
     WantedBy=multi-user.target
   EOF
-
+  verify false
   action [:create, :enable, :restart]
 end

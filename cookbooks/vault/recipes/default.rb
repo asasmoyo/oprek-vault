@@ -1,33 +1,4 @@
-user = "vault"
-
-dir = "/opt/vault"
-vault_zip = "/vagrant/tmp/vault.zip"
-vault_bin = "#{dir}/current/vault"
-config_file = "#{dir}/config.hcl"
-env_file = "/etc/profile.d/vault.sh"
-
-group user do
-end
-
-user user do
-  home dir
-  shell "/bin/bash"
-  gid user
-end
-
-directory dir do
-  action :create
-  owner user
-  group user
-  mode 0775
-end
-
-execute "install vault" do
-  command "unzip #{vault_zip} -d #{dir}/current"
-  user user
-  group user
-  only_if { ! ::File.exist? vault_bin }
-end
+include_recipe '::install'
 
 listen_ip = nil
 node[:network][:interfaces][:eth1][:addresses].each do |k, v|
@@ -39,7 +10,7 @@ if listen_ip.nil?
   raise "can't find listen ip"
 end
 
-file config_file do
+file node[:vault][:config_file] do
   content <<~EOF
     listener "tcp" {
       address     = "0.0.0.0:8200"
@@ -54,9 +25,9 @@ file config_file do
     ui = true
     api_addr = "http://#{listen_ip}:8200"
   EOF
-  user user
-  group user
-  mode 0775
+  user node[:vault][:user]
+  group node[:vault][:user]
+  mode 0664
   action :create
 end
 
@@ -67,11 +38,11 @@ systemd_unit 'vault.service' do
     Documentation=https://www.vaultproject.io/docs/
     Requires=network-online.target
     After=network-online.target
-    ConditionFileNotEmpty=#{config_file}
+    ConditionFileNotEmpty=#{node[:vault][:config_file]}
 
     [Service]
-    User=#{user}
-    Group=#{user}
+    User=#{node[:vault][:user]}
+    Group=#{node[:vault][:user]}
     ProtectSystem=full
     ProtectHome=read-only
     PrivateTmp=yes
@@ -81,7 +52,7 @@ systemd_unit 'vault.service' do
     Capabilities=CAP_IPC_LOCK+ep
     CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
     NoNewPrivileges=yes
-    ExecStart=#{vault_bin} server -config=#{config_file}
+    ExecStart=#{node[:vault][:bin]} server -config=#{node[:vault][:config_file]}
     ExecReload=/bin/kill --signal HUP $MAINPID
     KillMode=process
     KillSignal=SIGINT
@@ -95,15 +66,15 @@ systemd_unit 'vault.service' do
     [Install]
     WantedBy=multi-user.target
   EOF
-
+  verify false
   action [:create, :enable, :restart]
 end
 
-file env_file do
+file node[:vault][:env_file] do
   content <<~EOF
     export VAULT_ADDR=http://127.0.0.1:8200
   EOF
   user 'root'
   group 'root'
-  mode 0700
+  mode 0660
 end

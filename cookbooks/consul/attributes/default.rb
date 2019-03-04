@@ -1,0 +1,7 @@
+default['consul']['user'] = 'consul'
+default['consul']['dc'] = 'example-dc'
+default['consul']['dir'] = '/opt/consul'
+default['consul']['bin'] = '/opt/consul/current/consul'
+default['consul']['data_dir'] = '/opt/consul/data'
+default['consul']['config_file'] = '/opt/consul/config.hcl'
+default['consul']['encryption_key'] = 'bL/xPRcn6z4vyzmiDDqPZA=='
