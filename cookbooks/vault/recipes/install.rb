@@ -13,7 +13,7 @@ directory node[:vault][:dir] do
   action :create
   owner node[:vault][:user]
   group node[:vault][:user]
-  mode 0770
+  mode 0775
 end
 
 execute "install vault" do

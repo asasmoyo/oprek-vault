@@ -76,5 +76,5 @@ file node[:vault][:env_file] do
   EOF
   user 'root'
   group 'root'
-  mode 0660
+  mode 0664
 end

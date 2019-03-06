@@ -1,7 +1,9 @@
-file '/etc/nginx/conf.d/vault.conf' do
+file "#{node[:consul_template][:template_dir]}/vault.conf.ctmpl" do
   content <<~EOF
     upstream active_vault {
-      server vault.service.consul:8200 max_fails=3 fail_timeout=1;
+      {{ range service "vault" }}
+      server {{ .Address }}:{{ .Port }} max_fails=3 fail_timeout=1;
+      {{ end }}
     }
 
     server {
@@ -17,6 +19,48 @@ file '/etc/nginx/conf.d/vault.conf' do
   EOF
 end
 
+file "#{node[:consul_template][:template_dir]}/app_api.env.ctmpl" do
+  content <<~EOF
+    {
+      {{ with secret "database/creds/app-api-writer" }}
+        "username": "{{ .Data.username }}",
+        "password": "{{ .Data.password }}"
+      {{ end }}
+    }
+  EOF
+end
+
+file "#{node[:consul_template][:config_dir]}/vault.hcl" do
+  content <<~EOF
+    vault {
+      address = "http://vault.service.consul:8200"
+      token = "s.HjigB8lxt9pIBG3eJQmN08Sz"
+      unwrap_token = false
+      renew_token = false
+      log_level = "debug"
+      ssl {
+        enabled = false
+      }
+    }
+
+    template {
+      source = "#{node[:consul_template][:template_dir]}/vault.conf.ctmpl"
+      destination = "/etc/nginx/conf.d/vault.conf"
+      command = "sudo systemctl restart nginx"
+      command_timeout = "5s"
+      perms = 0664
+    }
+
+    template {
+      source = "#{node[:consul_template][:template_dir]}/app_api.env.ctmpl"
+      destination = "/home/vagrant/app_api.env"
+      perms = 0660
+    }
+  EOF
+end
+
 service 'nginx' do
   action [:restart]
+  # can fail when no unsealed vault
+  ignore_failure true
 end

@@ -13,7 +13,7 @@ directory node[:consul][:dir] do
   action :create
   owner node[:consul][:user]
   group node[:consul][:user]
-  mode 0770
+  mode 0775
 end
 
 execute "install consul" do

@@ -15,7 +15,7 @@ selected = server_lists.select { |item| item != listen_ip }
 
 file node[:consul][:config_file] do
   content <<~EOF
-    data_dir = "#{node[:consul][:dir]}"
+    data_dir = "#{node[:consul][:data_dir]}"
     bind_addr = "#{listen_ip}"
     client_addr = "0.0.0.0"
     encrypt = "#{node[:consul][:encryption_key]}"

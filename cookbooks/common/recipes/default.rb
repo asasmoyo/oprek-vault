@@ -12,6 +12,14 @@ file '/etc/dnsmasq.conf' do
   EOF
 end
 
+# unlink it from systemd managed file
+link '/etc/resolv.conf' do
+  action :delete
+  only_if {
+    ::File.symlink?('/etc/resolv.conf')
+  }
+end
+
 file '/etc/resolv.conf' do
   content <<~EOF
     nameserver 127.0.0.1

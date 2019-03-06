@@ -1,0 +1,8 @@
+default['app']['database']['postgres_password'] = 'secret'
+default['app']['database']['name'] = 'example-db'
+default['app']['database']['username'] = 'example-user'
+default['app']['database']['password'] = 'example-password'
+default['consul_template']['dir'] = '/opt/consul-template'
+default['consul_template']['config_dir'] = '/opt/consul-template/config'
+default['consul_template']['template_dir'] = '/opt/consul-template/templates'
+default['consul_template']['bin'] = '/opt/consul-template/current/consul-template'
